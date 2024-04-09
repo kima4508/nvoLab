@@ -1,0 +1,21 @@
+FROM ubuntu:20.04
+RUN apt-get -y  update
+RUN apt-get install -y net-tools
+RUN apt-get install -y iputils-ping
+RUN apt-get install -y openvswitch-switch
+RUN apt-get install -y sudo
+RUN apt-get install -y curl
+RUN apt-get install -y gnupg2
+#RUN apt-get install -y systemd
+RUN curl -s https://deb.frrouting.org/frr/keys.asc | sudo apt-key add -
+RUN apt-get install -y lsb-release
+RUN apt-get clean all
+RUN echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
+RUN apt-get -y update
+RUN apt install -y frr frr-pythontools
+COPY code.sh code.sh
+RUN sh code.sh
+RUN echo "net.ipv4.conf.all.forwarding=1" >> /etc/sysctl.conf && \
+    echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
+RUN sed -i 's/^bgpd=no/bgpd=yes/' /etc/frr/daemons
+CMD ["sudo","service","frr","restart"]
